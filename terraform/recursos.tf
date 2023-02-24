@@ -1,4 +1,4 @@
-### Máquina Virtural Ubuntu ###
+### Máquina Virtual Ubuntu ###
 resource "azurerm_resource_group" "CasoPractico2" {
   name     = "resources"
   location = var.location
