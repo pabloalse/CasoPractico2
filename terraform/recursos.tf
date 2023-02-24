@@ -84,10 +84,14 @@ resource "azurerm_network_security_group" "SecurityGroupCasoPractico2" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = var.My_IP
+    source_address_prefix      = "${trimspace(data.http.myip.body)}"
     destination_address_prefix = "*"
   }
 }
+
+output "my_public_ip_address" {
+  value = "${data.http.myip.body}/32"
+} 
 
 resource "azurerm_network_interface_security_group_association" "interface_security_group_association" {
   network_interface_id      = azurerm_network_interface.NetworkNicCasoPractico2.id
@@ -126,10 +130,6 @@ resource "azurerm_kubernetes_cluster" "AKSCasoPractico2" {
 
   identity {
     type = "SystemAssigned"
-  }
-
-   tags = {
-    Environment = "Production"
   }
 
 }

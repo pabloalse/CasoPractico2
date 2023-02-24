@@ -16,8 +16,7 @@ variable "ssh_user" {
   default     = "adminuser"
 }
 
-variable "My_IP" {
-  type        = string
-  description = "Usuario para hacer ssh"
-  default     = "94.124.27.15"
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
 }
+
