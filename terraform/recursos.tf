@@ -40,7 +40,7 @@ resource "azurerm_public_ip" "public_ip" {
 
 output "public_ip_address" {
   value = azurerm_public_ip.public_ip.ip_address
-} 
+}
 
 resource "azurerm_linux_virtual_machine" "VirtualMachineCasoPractico2" {
   name                = "VirtualMachineCasoPractico2"
@@ -65,8 +65,8 @@ resource "azurerm_linux_virtual_machine" "VirtualMachineCasoPractico2" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
 }
@@ -84,14 +84,14 @@ resource "azurerm_network_security_group" "SecurityGroupCasoPractico2" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "${trimspace(data.http.myip.body)}"
+    source_address_prefix      = trimspace(data.http.myip.body)
     destination_address_prefix = "*"
   }
 }
 
 output "my_public_ip_address" {
   value = "${data.http.myip.body}/32"
-} 
+}
 
 resource "azurerm_network_interface_security_group_association" "interface_security_group_association" {
   network_interface_id      = azurerm_network_interface.NetworkNicCasoPractico2.id
@@ -114,8 +114,8 @@ resource "azurerm_container_registry" "containerRegistryCasoPractico2" {
   admin_enabled       = false
 }
 
-#### Azure Kubernetes Cluster ####
 
+#### Azure Kubernetes Cluster ####
 resource "azurerm_kubernetes_cluster" "AKSCasoPractico2" {
   name                = "AKSCasoPractico2"
   resource_group_name = azurerm_resource_group.CasoPractico2.name

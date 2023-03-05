@@ -1,0 +1,1 @@
+ansible-playbook -i hosts playbook.yml --key-file ~/.ssh/id_rsa

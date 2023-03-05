@@ -1,0 +1,78 @@
+---
+- name: CasoPractico2
+  hosts: UbuntuServer
+  remote_user: adminuser
+  become: true
+
+  tasks:
+    - name: Updating Ubuntu
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+
+    - name: Installing podman
+      ansible.builtin.apt:
+        name: podman
+        state: present
+
+    - name: Login to default registry
+      containers.podman.podman_login:
+        username: pabloalse
+        password: fLorida.135quay
+        registry: quay.io
+
+    - name: Pull apache image
+      containers.podman.podman_image:
+        name: quay.io/centos7/httpd-24-centos7
+
+    - name: Tagging httpd
+      containers.podman.podman_tag:
+        image: quay.io/centos7/httpd-24-centos7
+        target_names:
+          - httpd
+
+    - name: Pull postgresql image
+      containers.podman.podman_image:
+        name: quay.io/centos7/postgresql-12-centos7
+
+    - name: Tagging postgresql
+      containers.podman.podman_tag:
+        image: quay.io/centos7/postgresql-12-centos7
+        target_names:
+          - postgresql
+
+    - name: Creating a httpd Container
+      containers.podman.podman_container:
+        name: webServer
+        image: httpd
+        state: started
+        detach: true
+        exposed_ports:
+          - 80
+        ports:
+          - 4444:80
+        volumes: /home/:/usr/local/apache2/htdocs/
+
+    - name: Run container httpd
+      containers.podman.podman_container:
+        name: container
+        image: httpd
+        state: started
+
+    - name: Build and push an httpd image
+      containers.podman.podman_image:
+        name: httpd
+        push: true
+        username: containerRegistryCasoPractico2
+        password: fL1QaAZh+8QDNS5FqK8cJHOL+HVCTXjRpAEjqHZ5X/+ACRAC4yv9
+        push_args:
+          dest: containerregistrycasopractico2.azurecr.io
+
+    - name: Build and push an postgresql image
+      containers.podman.podman_image:
+        name: postgresql
+        push: true
+        username: containerRegistryCasoPractico2
+        password: fL1QaAZh+8QDNS5FqK8cJHOL+HVCTXjRpAEjqHZ5X/+ACRAC4yv9
+        push_args:
+          dest: containerregistrycasopractico2.azurecr.io
