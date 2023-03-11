@@ -17,8 +17,8 @@
 
     - name: Login to default registry
       containers.podman.podman_login:
-        username: pabloalse
-        password: fLorida.135quay
+        username: 
+        password: 
         registry: quay.io
 
     - name: Pull apache image
