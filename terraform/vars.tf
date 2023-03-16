@@ -19,4 +19,3 @@ variable "ssh_user" {
 data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
-

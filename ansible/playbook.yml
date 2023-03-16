@@ -1,5 +1,5 @@
 ---
-- name: CasoPractico2
+- name: Apache deployment
   hosts: UbuntuServer
   remote_user: adminuser
   become: true
@@ -15,7 +15,20 @@
         name: podman
         state: present
 
-    - name: Login to default registry
+    - name: Install python3
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Install passlib
+      ansible.builtin.pip:
+        name:
+          - passlib
+        state: present
+
+    - name: Login to quay.io registry
       containers.podman.podman_login:
         username: 
         password: 
@@ -41,6 +54,32 @@
         target_names:
           - postgresdb
 
+    - name: Generate an OpenSSL private key with the default values (4096 bits, RSA)
+      community.crypto.openssl_privatekey:
+        path: /etc/ssl/private/casopractico2.pem
+
+    - name: Generate an OpenSSL Certificate Signing Request
+      community.crypto.openssl_csr:
+        path: /etc/ssl/casopractico2.csr
+        privatekey_path: /etc/ssl/private/casopractico2.pem
+        common_name: local
+
+    - name: Generate a Self Signed OpenSSL certificate
+      community.crypto.x509_certificate:
+        path: /etc/ssl/casopractico2.crt
+        privatekey_path: /etc/ssl/private/casopractico2.pem
+        csr_path: /etc/ssl/casopractico2.csr
+        provider: selfsigned
+
+    - name: Add a user to a password file and ensure permissions are set
+      community.general.htpasswd:
+        path: /etc/apache2/passwdfile
+        name: pabloalse
+        password: pabloalse
+        owner: root
+        group: www-data
+        mode: "0640"
+
     - name: Creating a httpd Container
       containers.podman.podman_container:
         name: webServer
@@ -50,29 +89,54 @@
         exposed_ports:
           - 80
         ports:
-          - 4444:80
-        volumes: /home/:/usr/local/apache2/htdocs/
+          - 80:80
+          - 443:443
+        volumes:
+          - "/home:/usr/local/apache2/htdocs/"
+          - "/etc/ssl/casopractico2.crt:/usr/local/apache2/conf/server.crt"
+          - "/etc/apache2/passwdfile:/etc/apache2/bin/htpasswd/passwdfile"
 
-    - name: Run container httpd
-      containers.podman.podman_container:
-        name: container
-        image: httpd
-        state: started
+    - name: Log out of quay.io
+      containers.podman.podman_logout:
+        registry: quay.io
+
+    - name: Login to azure container registry
+      containers.podman.podman_login:
+        username: containerRegistryCasoPractico2
+        password: MMlOb4Mfh617tdfNnFwpD+Cty+rEsQiB0Xc5kkr5R4+ACRAFpDbj
+        registry: containerregistrycasopractico2.azurecr.io
 
     - name: Build and push an httpd image
       containers.podman.podman_image:
         name: httpd
+        path: /Users/juanpabloalonsosegura/Desktop/CasoPractico2/ansible
         push: true
-        username: containerRegistryCasoPractico2
-        password: eN74cG5qW9yRQKQ2Rdc2/nqzJ0BmAwyqCSvOq8obdH+ACRCPbR/M
+        tag: casopractico2
         push_args:
           dest: containerregistrycasopractico2.azurecr.io
 
     - name: Build and push an postgresdb image
       containers.podman.podman_image:
         name: postgresdb
+        path: /Users/juanpabloalonsosegura/Desktop/CasoPractico2/ansible
         push: true
-        username: containerRegistryCasoPractico2
-        password: NYc1TtpH4ti0WWlNQU4XEy/A4Td32rJ3U7y+5L2JZc+ACRC5k4If
+        tag: casopractico2
         push_args:
           dest: containerregistrycasopractico2.azurecr.io
+
+    - name: Pull apache image
+      containers.podman.podman_image:
+        name: containerregistrycasopractico2.azurecr.io/httpd
+        tag: casopractico2
+
+    - name: Tagging httpd
+      containers.podman.podman_tag:
+        image: containerregistrycasopractico2.azurecr.io/httpd
+        target_names:
+          - httpd
+
+    - name: Run container httpd
+      containers.podman.podman_container:
+        name: webServer
+        image: httpd
+        state: started

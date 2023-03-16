@@ -1,0 +1,18 @@
+---
+- name: Postgre deployment on AKS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Create a k8s namespace
+      kubernetes.core.k8s:
+        name: casopractico2
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Create a Deployment by reading the definition from a local file
+      kubernetes.core.k8s:
+        state: present
+        src: ../ansible/k8s/K8sDeployment.yml

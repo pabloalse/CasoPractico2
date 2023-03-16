@@ -1,6 +1,6 @@
 ### Máquina Virtual Ubuntu ###
 resource "azurerm_resource_group" "CasoPractico2" {
-  name     = "resources"
+  name     = "CasoPractico2"
   location = var.location
 }
 
@@ -87,6 +87,53 @@ resource "azurerm_network_security_group" "SecurityGroupCasoPractico2" {
     source_address_prefix      = trimspace(data.http.myip.body)
     destination_address_prefix = "*"
   }
+  security_rule {
+    name                       = "HTTP80"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "HTTP8080"
+    priority                   = 102
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+    security_rule {
+    name                       = "HTTPS443"
+    priority                   = 103
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+    security_rule {
+    name                       = "HTTPS8443"
+    priority                   = 104
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
 }
 
 output "my_public_ip_address" {
@@ -122,10 +169,23 @@ resource "azurerm_kubernetes_cluster" "AKSCasoPractico2" {
   location            = azurerm_resource_group.CasoPractico2.location
   dns_prefix          = "DNSCasoPractico2"
 
+  linux_profile {
+    admin_username = "azureuser"
+
+    ssh_key {
+      key_data = file(var.public_key_path)
+    }
+  }
+
+  network_profile {
+    network_plugin    = "kubenet"
+    load_balancer_sku = "standard"
+  }
+
   default_node_pool {
     name       = "default"
-    node_count = 1
     vm_size    = "Standard_D2_v2"
+    node_count = 1
   }
 
   identity {
@@ -148,6 +208,5 @@ output "client_certificate" {
 
 output "kube_config" {
   value = azurerm_kubernetes_cluster.AKSCasoPractico2.kube_config_raw
-
   sensitive = true
 }
