@@ -103,7 +103,7 @@
     - name: Login to azure container registry
       containers.podman.podman_login:
         username: containerRegistryCasoPractico2
-        password: MMlOb4Mfh617tdfNnFwpD+Cty+rEsQiB0Xc5kkr5R4+ACRAFpDbj
+        password: 
         registry: containerregistrycasopractico2.azurecr.io
 
     - name: Build and push an httpd image
